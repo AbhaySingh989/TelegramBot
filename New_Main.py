@@ -531,23 +531,37 @@ async def get_text_from_input(update: Update, context: ContextTypes.DEFAULT_TYPE
             raw_text = await transcribe_audio_with_gemini(temp_file_path, context)
             if raw_text is None or "[" in raw_text: # Check for None or error messages like "[BLOCKED...]"
                 error_msg_to_return = raw_text or "❌ Transcription failed (Unknown error)."
-                if status_msg: try: await status_msg.delete(); except Exception: pass
+                if status_msg:
+                    try:
+                        await status_msg.delete()
+                    except Exception: 
+                        pass
                 return None, input_type, error_msg_to_return
             await status_msg.edit_text("✍️ Enhancing transcript...")
             punctuated_text = await add_punctuation_with_gemini(raw_text, context)
-            if status_msg: await status_msg.delete() 
+            if status_msg:
+                await status_msg.delete() 
             display_transcript = punctuated_text
             logger.info(f"Displaying transcript (len: {len(display_transcript)}) user {user_id}")
             header_text = escape_markdown(f"*Audio Transcript* (AI Enhanced):", version=2)
-            try: await message.reply_text(header_text, parse_mode=ParseMode.MARKDOWN_V2)
-            except Exception as e: logger.error(f"Error sending transcript header: {e}"); await message.reply_text("Audio Transcript (AI Enhanced):", parse_mode=None) 
+            try:
+                await message.reply_text(header_text, parse_mode=ParseMode.MARKDOWN_V2)
+            except Exception as e:
+                logger.error(f"Error sending transcript header: {e}")
+                await message.reply_text("Audio Transcript (AI Enhanced):", parse_mode=None) 
             safe_display_transcript = escape_markdown(display_transcript, version=2)
-            max_len = 4000; chunks = [safe_display_transcript[i:i+max_len] for i in range(0, len(safe_display_transcript), max_len)]
+            max_len = 4000
+            chunks = [safe_display_transcript[i:i+max_len] for i in range(0, len(safe_display_transcript), max_len)]
             for i, chunk in enumerate(chunks):
                 message_text = f"```\n{chunk}\n```"
-                try: await message.reply_text(message_text, parse_mode=ParseMode.MARKDOWN_V2)
-                except telegram.error.BadRequest as e: logger.error(f"BadRequest transcript chunk {i+1}: {e}. Plain."); await message.reply_text(display_transcript[i*max_len:(i+1)*max_len], parse_mode=None)
-                except Exception as e: logger.error(f"Error sending transcript chunk {i+1}: {e}"); await message.reply_text(f"[Error display part {i+1}]")
+                try:
+                    await message.reply_text(message_text, parse_mode=ParseMode.MARKDOWN_V2)
+                except telegram.error.BadRequest as e:
+                    logger.error(f"BadRequest transcript chunk {i+1}: {e}. Plain.")
+                    await message.reply_text(display_transcript[i*max_len:(i+1)*max_len], parse_mode=None)
+                except Exception as e:
+                    logger.error(f"Error sending transcript chunk {i+1}: {e}")
+                    await message.reply_text(f"[Error display part {i+1}]")
             final_text = punctuated_text
 
         elif photo_input:
@@ -572,13 +586,24 @@ async def get_text_from_input(update: Update, context: ContextTypes.DEFAULT_TYPE
         return final_text, input_type, None
     except Exception as e:
         logger.error(f"Error in get_text_from_input main try block: {e}", exc_info=True)
-        if status_msg: try: await status_msg.delete(); except Exception: pass
+        if status_msg:
+            try:
+                await status_msg.delete()
+            except Exception:
+                pass
         return None, input_type, "An unexpected error occurred processing your input."
     finally:
         if temp_file_path and os.path.exists(temp_file_path):
-            try: os.remove(temp_file_path); logger.info(f"Temp file deleted: {temp_file_path}")
-            except OSError as e_del_file: logger.error(f"Error deleting temp file {temp_file_path}: {e_del_file}")
-        if status_msg: try: await status_msg.delete(); except Exception as e_del_msg: logger.warning(f"Could not delete status message: {e_del_msg}")
+            try:
+                os.remove(temp_file_path)
+                logger.info(f"Temp file deleted: {temp_file_path}")
+            except OSError as e_del_file:
+                logger.error(f"Error deleting temp file {temp_file_path}: {e_del_file}")
+        if status_msg:
+            try:
+                await status_msg.delete()
+            except Exception as e_del_msg:
+                logger.warning(f"Could not delete status message: {e_del_msg}")
 
 async def handle_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
@@ -750,8 +775,21 @@ digraph JournalMap {{
     clean_text_summary = text[:30].replace('"', '').replace('\n', ' ').replace('{', '(').replace('}', ')')
     clean_sentiment = sentiment.replace('"', '').replace('{', '(').replace('}', ')')
     
-    topics_dot_str = ' '.join([f'topic{i} [label="Topic: {topic.strip().replace("-", "_").replace(" ", "_").replace("'", "").replace("`", "").replace("\"", "\\\"")}", fillcolor="lightgreen"]; main -> topic{i};' for i, topic in enumerate(str(topics).split(',')) if topic.strip() and topic != 'N/A'])
-    categories_dot_str = ' '.join([f'cat{i} [label="Category: {category.strip().replace("-", "_").replace(" ", "_").replace("'", "").replace("`", "")}", fillcolor="lightcoral"]; main -> cat{i};' for i, category in enumerate(str(categories).split(',')) if category.strip() and category != 'N/A'])
+    # Pre-process topics within the list comprehension for clarity and to avoid complex f-string expressions
+    topic_parts = []
+    for i, topic_str in enumerate(str(topics).split(',')):
+        if topic_str.strip() and topic_str.strip() != 'N/A':
+            processed_topic = topic_str.strip().replace("-", "_").replace(" ", "_").replace("'", "").replace("`", "").replace("\"", "\\\"")
+            topic_parts.append(f'topic{i} [label="Topic: {processed_topic}", fillcolor="lightgreen"]; main -> topic{i};')
+    topics_dot_str = ' '.join(topic_parts)
+    
+    # Pre-process categories for clarity and to avoid complex f-string expressions
+    category_parts = []
+    for i, category_str in enumerate(str(categories).split(',')):
+        if category_str.strip() and category_str.strip() != 'N/A':
+            processed_category = category_str.strip().replace("-", "_").replace(" ", "_").replace("'", "").replace("`", "") # No quote escaping needed here as per original
+            category_parts.append(f'cat{i} [label="Category: {processed_category}", fillcolor="lightcoral"]; main -> cat{i};')
+    categories_dot_str = ' '.join(category_parts)
 
     therapist_analysis_prompt = therapist_analysis_prompt_template.format(
         display_name=display_name,
@@ -850,9 +888,12 @@ async def handle_ocr_logic(update: Update, context: ContextTypes.DEFAULT_TYPE, t
         try:
             await update.message.reply_text(message_text, parse_mode=ParseMode.MARKDOWN_V2)
         except telegram.error.BadRequest as e:
-            logger.error(f"BadRequest sending OCR chunk {i+1}: {e}. Sending plain."); plain_text_chunk = text[i*max_len:(i+1)*max_len]; await update.message.reply_text(plain_text_chunk, parse_mode=None)
+            logger.error(f"BadRequest sending OCR chunk {i+1}: {e}. Sending plain.")
+            plain_text_chunk = text[i*max_len:(i+1)*max_len]
+            await update.message.reply_text(plain_text_chunk, parse_mode=None)
         except Exception as e:
-             logger.error(f"Error sending OCR chunk {i+1}: {e}"); await update.message.reply_text(f"[Error display part {i+1}]")
+             logger.error(f"Error sending OCR chunk {i+1}: {e}")
+             await update.message.reply_text(f"[Error display part {i+1}]")
 
 # --- POST INIT FUNCTION ---
 async def post_init_tasks(application: Application) -> None:

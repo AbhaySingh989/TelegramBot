@@ -986,5 +986,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-[end of New_Main.py]

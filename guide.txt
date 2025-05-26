@@ -1,0 +1,108 @@
+=========================================
+ Telegram Bot Setup Guide (New_Main.py)
+=========================================
+
+**Introduction:**
+This guide will help you set up and run the Python-based Telegram Bot powered by `New_Main.py`. This bot uses Google's Gemini AI for various functionalities.
+
+**Prerequisites:**
+1.  **Python:** You need Python installed on your computer. If you don't have it, download it from [https://www.python.org/downloads/](https://www.python.org/downloads/). Version 3.7+ is recommended.
+2.  **PIP:** This is Python's package installer and usually comes with Python.
+3.  **Project Files:** You need all the provided Python scripts and configuration files. It's crucial that all `.py` files are kept together in the same directory.
+
+**Required Files:**
+Ensure you have the following files in your project directory:
+*   `New_Main.py` (The main bot script)
+*   `database_setup.py` (Sets up the database; **IMPORTANT for fixing 'ModuleNotFoundError: No module named database_setup'**)
+*   `utils.py` (Utility functions)
+*   `db_utils.py` (Database utility functions)
+*   `requirements.txt` (Lists Python libraries needed)
+*   `env.txt` or `.env` (For your API keys and tokens)
+
+**Setup Steps:**
+
+**Step 1: Create a Project Directory**
+   - Create a new folder on your computer where you'll keep all the bot files. Let's call it `MyTelegramBot`.
+
+**Step 2: Place All Files in the Project Directory**
+   - Download and place `New_Main.py`, `database_setup.py`, `utils.py`, `db_utils.py`, and `requirements.txt` directly into the `MyTelegramBot` folder you created.
+   - **Crucial Check for `ModuleNotFoundError`:** Make sure `database_setup.py` is definitely in this same folder!
+
+**Step 3: Configure Environment Variables (.env file)**
+   - This file stores your secret API keys.
+   - If you have a file named `env.txt`, rename it to `.env` (notice the dot at the beginning and no 'txt').
+   - Open the `.env` file with a text editor. It should look like this:
+     ```
+     TELEGRAM_BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN_HERE"
+     GEMINI_API_KEY="YOUR_GEMINI_API_KEY_HERE"
+     ```
+   - **Replace `"YOUR_TELEGRAM_BOT_TOKEN_HERE"`** with your actual Telegram Bot Token from BotFather on Telegram.
+   - **Replace `"YOUR_GEMINI_API_KEY_HERE"`** with your actual Gemini API Key from Google AI Studio.
+   - **Important:** Keep these keys secret! Do not share your `.env` file or its contents.
+
+**Step 4: Set Up a Virtual Environment (Highly Recommended)**
+   - A virtual environment keeps the bot's Python libraries separate from other Python projects.
+   - Open your command line/terminal.
+   - Navigate to your project directory (e.g., `cd path/to/MyTelegramBot`).
+   - Create the virtual environment:
+     ```bash
+     python -m venv venv
+     ```
+   - Activate the virtual environment:
+     *   **Windows (Command Prompt or PowerShell):**
+         ```bash
+         .\venv\Scripts\activate
+         ```
+     *   **macOS / Linux (Terminal):**
+         ```bash
+         source venv/bin/activate
+         ```
+     You should see `(venv)` at the beginning of your terminal prompt if it's active.
+
+**Step 5: Install Required Python Libraries**
+   - While your virtual environment is active (you see `(venv)`), run this command in your project directory:
+     ```bash
+     pip install -r requirements.txt
+     ```
+   - This will read `requirements.txt` and install all the necessary libraries (like `python-telegram-bot`, `google-generativeai`, `python-dotenv`, `Pillow`, `graphviz`).
+
+**Running the Bot:**
+1.  Make sure your virtual environment is active.
+2.  Navigate to your project directory in the terminal.
+3.  Run the main script:
+    ```bash
+    python New_Main.py
+    ```
+4.  If everything is set up correctly, you'll see log messages indicating the bot is starting.
+
+**Troubleshooting Common Errors:**
+
+*   **`ModuleNotFoundError: No module named 'database_setup'`**
+    *   **Cause:** `New_Main.py` cannot find `database_setup.py`.
+    *   **Fix:** Ensure `database_setup.py` is in the EXACT SAME directory as `New_Main.py`. Double-check spelling.
+
+*   **`ModuleNotFoundError: No module named 'telegram'` (or `google.generativeai`, `dotenv`, etc.)**
+    *   **Cause:** Required libraries are not installed correctly.
+    *   **Fix:**
+        1.  Make sure your virtual environment is active (`(venv)` should be visible).
+        2.  Run `pip install -r requirements.txt` again.
+        3.  If it still fails, check for errors during the `pip install` command.
+
+*   **API Key Errors (e.g., related to Telegram token or Gemini key)**
+    *   **Cause:** The API keys are missing, incorrect, or the `.env` file is not being read.
+    *   **Fix:**
+        1.  Ensure you have a file named `.env` (not `env.txt`) in your project directory.
+        2.  Verify that `TELEGRAM_BOT_TOKEN` and `GEMINI_API_KEY` are correctly set in the `.env` file with your actual keys.
+        3.  Make sure there are no extra spaces or characters around the keys.
+
+*   **Graphviz "ExecutableNotFound" errors (if mind maps feature is used and fails)**
+    *   **Cause:** The `graphviz` library is a Python wrapper for the Graphviz software, which needs to be installed on your system separately.
+    *   **Fix:**
+        1.  Download and install Graphviz from [https://graphviz.org/download/](https://graphviz.org/download/).
+        2.  During installation, ensure you add Graphviz's `bin` directory to your system's PATH environment variable. This allows Python to find the Graphviz executables (like `dot`).
+        3.  You might need to restart your terminal or computer after updating the PATH.
+
+**Stopping the Bot:**
+   - To stop the bot, go to the terminal window where it's running and press `Ctrl+C`.
+
+Good luck, and enjoy your bot!

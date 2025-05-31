@@ -25,14 +25,14 @@ def create_tables(conn: sqlite3.Connection | None = None) -> None:
     """Creates all necessary tables in the database if they don't exist."""
     if conn is None:
         conn = get_db_connection()
-    
+
     if conn is None:
         print("Failed to create tables: No database connection.")
         return
 
     try:
         cursor = conn.cursor()
-        
+
         # Users Table
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
@@ -44,7 +44,7 @@ def create_tables(conn: sqlite3.Connection | None = None) -> None:
             preferences TEXT  -- JSON for storing various user preferences
         )
         """)
-        
+
         # Journal Entries Table
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS journal_entries (
@@ -79,10 +79,10 @@ def create_tables(conn: sqlite3.Connection | None = None) -> None:
         CREATE TABLE IF NOT EXISTS daily_prompts (
             prompt_id INTEGER PRIMARY KEY AUTOINCREMENT,
             prompt_text TEXT NOT NULL UNIQUE,
-            date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+            date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)
-        
+
         conn.commit()
         print("Tables checked/created successfully.")
     except sqlite3.Error as e:
@@ -140,20 +140,20 @@ def update_user_preferences(user_id: int, display_name: str | None = None, other
     try:
         cursor = conn.cursor()
         current_prefs_json = cursor.execute("SELECT preferences FROM users WHERE user_id = ?", (user_id,)).fetchone()
-        
+
         current_prefs = {}
         if current_prefs_json and current_prefs_json[0]:
             current_prefs = json.loads(current_prefs_json[0])
-        
+
         if display_name is not None:
-            cursor.execute("UPDATE users SET display_name = ?, last_interaction = ? WHERE user_id = ?", 
+            cursor.execute("UPDATE users SET display_name = ?, last_interaction = ? WHERE user_id = ?",
                            (display_name, datetime.now(timezone.utc), user_id))
-        
+
         if other_prefs is not None:
             current_prefs.update(other_prefs)
-            cursor.execute("UPDATE users SET preferences = ?, last_interaction = ? WHERE user_id = ?", 
+            cursor.execute("UPDATE users SET preferences = ?, last_interaction = ? WHERE user_id = ?",
                            (json.dumps(current_prefs), datetime.now(timezone.utc), user_id))
-        
+
         conn.commit()
         return True
     except sqlite3.Error as e:
@@ -163,9 +163,9 @@ def update_user_preferences(user_id: int, display_name: str | None = None, other
         if conn: conn.close()
 
 # --- Journaling ---
-def add_journal_entry(user_id: int, raw_text: str, input_type: str, word_count: int, 
-                      sentiment: str | None = None, topics: str | None = None, 
-                      categories: str | None = None, ai_analysis_text: str | None = None, 
+def add_journal_entry(user_id: int, raw_text: str, input_type: str, word_count: int,
+                      sentiment: str | None = None, topics: str | None = None,
+                      categories: str | None = None, ai_analysis_text: str | None = None,
                       dot_code: str | None = None) -> int | None:
     conn = get_db_connection()
     if not conn: return None
@@ -173,7 +173,7 @@ def add_journal_entry(user_id: int, raw_text: str, input_type: str, word_count: 
         cursor = conn.cursor()
         ts = datetime.now(timezone.utc)
         cursor.execute("""
-            INSERT INTO journal_entries 
+            INSERT INTO journal_entries
             (user_id, timestamp, raw_text, input_type, word_count, sentiment, topics, categories, ai_analysis_text, dot_code)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (user_id, ts, raw_text, input_type, word_count, sentiment, topics, categories, ai_analysis_text, dot_code))
@@ -185,8 +185,8 @@ def add_journal_entry(user_id: int, raw_text: str, input_type: str, word_count: 
     finally:
         if conn: conn.close()
 
-def update_journal_entry_analysis(entry_id: int, sentiment: str | None = None, topics: str | None = None, 
-                                  categories: str | None = None, ai_analysis_text: str | None = None, 
+def update_journal_entry_analysis(entry_id: int, sentiment: str | None = None, topics: str | None = None,
+                                  categories: str | None = None, ai_analysis_text: str | None = None,
                                   dot_code: str | None = None) -> bool:
     conn = get_db_connection()
     if not conn: return False
@@ -205,7 +205,7 @@ def update_journal_entry_analysis(entry_id: int, sentiment: str | None = None, t
 
         sql = f"UPDATE journal_entries SET {', '.join(fields_to_update)} WHERE entry_id = ?"
         params.append(entry_id)
-        
+
         cursor.execute(sql, tuple(params))
         conn.commit()
         return True
@@ -221,9 +221,9 @@ def get_journal_entries_by_user(user_id: int, limit: int = 10) -> list[dict]:
     try:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT * FROM journal_entries 
-            WHERE user_id = ? 
-            ORDER BY timestamp DESC 
+            SELECT * FROM journal_entries
+            WHERE user_id = ?
+            ORDER BY timestamp DESC
             LIMIT ?
         """, (user_id, limit))
         return [dict(row) for row in cursor.fetchall()]
@@ -303,7 +303,7 @@ if __name__ == '__main__':
     print(f"Running db_utils.py directly. Database will be at: {DATABASE_PATH}")
     # Ensure DATA_DIR exists (redundant if get_db_connection creates it, but good practice)
     os.makedirs(DATA_DIR, exist_ok=True)
-    
+
     # Create tables
     create_tables() # This will open and close its own connection
     print("Database tables checked/created.")
@@ -321,7 +321,7 @@ if __name__ == '__main__':
         "If you could tell your younger self one thing, what would it be?",
         "What does 'success' mean to you at this moment in your life?"
     ]
-    
+
     print("\nAdding initial daily prompts (if they don't exist already):")
     for prompt in initial_prompts:
         prompt_id = add_daily_prompt(prompt) # This will open and close its own connection
@@ -329,7 +329,7 @@ if __name__ == '__main__':
             print(f"  Added prompt ID {prompt_id}: {prompt}")
         else:
             print(f"  Prompt likely already exists or error occurred: {prompt}")
-    
+
     print("\nFetching a random prompt as a test:")
     random_prompt = get_random_daily_prompt() # This will open and close its own connection
     if random_prompt:

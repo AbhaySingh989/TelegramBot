@@ -87,7 +87,7 @@ END = ConversationHandler.END
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "bot_data")
 TEMP_DIR = os.path.join(DATA_DIR, "temp")
-TOKEN_USAGE_FILE = os.path.join(DATA_DIR, "token_usage.json") 
+TOKEN_USAGE_FILE = os.path.join(DATA_DIR, "token_usage.json")
 VISUALIZATIONS_DIR = os.path.join(DATA_DIR, "visualizations")
 JOURNAL_CATEGORIES_LIST = ["Emotional", "Family", "Grief", "Workplace", "Technology", "AI", "Spouse", "Kid", "Personal Reflection", "Health", "Finance", "Social", "Hobby", "Other"]
 
@@ -250,7 +250,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> s
         db_user_info = await asyncio.to_thread(db_utils.get_user, user_id) # Re-fetch to get the data
 
     display_name = db_user_info.get('display_name', telegram_username) if db_user_info and db_user_info.get('display_name') else telegram_username
-    
+
     logger.info(f"User {user_id} ({telegram_username}) /start. Name: {display_name}")
     context.user_data.pop('current_mode', None)
     keyboard = [
@@ -292,7 +292,7 @@ async def set_username_command(update: Update, context: ContextTypes.DEFAULT_TYP
     if not context.args:
         await update.message.reply_text("Usage: `/setusername Your Name Here`", parse_mode=ParseMode.MARKDOWN_V2)
         return
-    
+
     new_display_name = " ".join(context.args).strip()
     if not new_display_name or len(new_display_name) > 50:
         await update.message.reply_text("Invalid username (1-50 chars).")
@@ -348,12 +348,12 @@ async def feedback_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         await update.message.reply_text("Please provide your feedback after the /feedback command. For example: `/feedback I love this bot!`")
         return
     feedback_message = " ".join(context.args)
-    
+
     telegram_username = user.username or str(user_id)
     db_user_info = await asyncio.to_thread(db_utils.get_user, user_id)
     if not db_user_info:
         await asyncio.to_thread(db_utils.add_user, user_id, telegram_username)
-        
+
     success = await asyncio.to_thread(db_utils.add_feedback, user_id, feedback_message)
     if success:
         await update.message.reply_text("Thank you for your feedback! It has been recorded.")
@@ -365,20 +365,20 @@ async def enable_prompts_command(update: Update, context: ContextTypes.DEFAULT_T
     user = update.effective_user
     user_id = user.id
     telegram_username = user.username or str(user_id)
-    
+
     db_user_info = await asyncio.to_thread(db_utils.get_user, user_id)
     if not db_user_info:
         await asyncio.to_thread(db_utils.add_user, user_id, telegram_username)
 
-    current_preferences = await asyncio.to_thread(db_utils.get_user_preferences, user_id) 
-    if current_preferences is None: 
+    current_preferences = await asyncio.to_thread(db_utils.get_user_preferences, user_id)
+    if current_preferences is None:
         current_preferences = {}
 
-    new_prefs = current_preferences.copy() 
+    new_prefs = current_preferences.copy()
     new_prefs['daily_prompt_enabled'] = True
-    new_prefs['last_prompt_sent_date'] = None 
-    if 'preferred_prompt_time' not in new_prefs: 
-        new_prefs['preferred_prompt_time'] = '09:00' 
+    new_prefs['last_prompt_sent_date'] = None
+    if 'preferred_prompt_time' not in new_prefs:
+        new_prefs['preferred_prompt_time'] = '09:00'
 
     success = await asyncio.to_thread(db_utils.update_user_preferences, user_id, other_prefs=new_prefs)
     if success:
@@ -404,11 +404,11 @@ async def daily_prompt_scheduler(application: Application):
         await asyncio.sleep(3600) # Check every hour (3600 seconds)
         logger.info("Running daily prompt scheduler check...")
         try:
-            users_to_prompt = await asyncio.to_thread(db_utils.get_users_for_daily_prompt_check) 
+            users_to_prompt = await asyncio.to_thread(db_utils.get_users_for_daily_prompt_check)
             if not users_to_prompt:
                 logger.info("Daily prompt: No users to prompt at this time.")
                 continue
-            
+
             now_utc = datetime.now(timezone.utc)
             today_str = now_utc.strftime('%Y-%m-%d')
 
@@ -421,8 +421,8 @@ async def daily_prompt_scheduler(application: Application):
                         preferences = json.loads(preferences_str)
                     except json.JSONDecodeError:
                         logger.error(f"Could not parse preferences JSON for user {user_id}: {preferences_str}")
-                        continue 
-                
+                        continue
+
                 if preferences.get('daily_prompt_enabled') and preferences.get('last_prompt_sent_date') != today_str:
                     preferred_time_str = preferences.get('preferred_prompt_time', '09:00') # Default to 09:00 UTC
                     try:
@@ -535,12 +535,12 @@ async def get_text_from_input(update: Update, context: ContextTypes.DEFAULT_TYPE
                 return None, input_type, error_msg_to_return
             await status_msg.edit_text("✍️ Enhancing transcript...")
             punctuated_text = await add_punctuation_with_gemini(raw_text, context)
-            if status_msg: await status_msg.delete() 
+            if status_msg: await status_msg.delete()
             display_transcript = punctuated_text
             logger.info(f"Displaying transcript (len: {len(display_transcript)}) user {user_id}")
             header_text = escape_markdown(f"*Audio Transcript* (AI Enhanced):", version=2)
             try: await message.reply_text(header_text, parse_mode=ParseMode.MARKDOWN_V2)
-            except Exception as e: logger.error(f"Error sending transcript header: {e}"); await message.reply_text("Audio Transcript (AI Enhanced):", parse_mode=None) 
+            except Exception as e: logger.error(f"Error sending transcript header: {e}"); await message.reply_text("Audio Transcript (AI Enhanced):", parse_mode=None)
             safe_display_transcript = escape_markdown(display_transcript, version=2)
             max_len = 4000; chunks = [safe_display_transcript[i:i+max_len] for i in range(0, len(safe_display_transcript), max_len)]
             for i, chunk in enumerate(chunks):
@@ -634,10 +634,10 @@ async def handle_journal_logic(update: Update, context: ContextTypes.DEFAULT_TYP
     telegram_username = user.username or str(user_id)
 
     db_user_info = await asyncio.to_thread(db_utils.get_user, user_id)
-    display_name = telegram_username 
+    display_name = telegram_username
     if db_user_info:
         display_name = db_user_info.get('display_name') if db_user_info.get('display_name') else telegram_username
-    else: 
+    else:
         initial_display_name = user.first_name or telegram_username
         await asyncio.to_thread(db_utils.add_user, user_id, telegram_username, display_name=initial_display_name)
         db_user_info = await asyncio.to_thread(db_utils.get_user, user_id) # Re-fetch
@@ -645,7 +645,7 @@ async def handle_journal_logic(update: Update, context: ContextTypes.DEFAULT_TYP
         elif user.first_name: display_name = user.first_name
 
 
-    now = datetime.now(timezone.utc) 
+    now = datetime.now(timezone.utc)
     logger.info(f"Journal logic for user {user_id} ('{display_name}'). Input type: {input_type}, Text length: {len(text)}")
 
     status_msg = await update.message.reply_text("💾 Saving your thoughts...")
@@ -677,19 +677,19 @@ Sentiment: [Identified Sentiment]
 Topics: [Identified Topics]
 Categories: [Chosen Categories]"""
     categorization_prompt = categorization_prompt_template.format(text=text)
-    
+
     categorization_response, _ = await generate_gemini_response([categorization_prompt], context=context)
-    
+
     sentiment, topics, categories = "N/A", "N/A", "N/A"
     if categorization_response and not any(err_tag in categorization_response for err_tag in ["[BLOCKED:", "[API ERROR:", "[No text content received]"]):
         sentiment_match = re.search(r"Sentiment:\s*(.*)", categorization_response, re.IGNORECASE)
         topics_match = re.search(r"Topics:\s*(.*)", categorization_response, re.IGNORECASE)
         categories_match = re.search(r"Categories:\s*(.*)", categorization_response, re.IGNORECASE)
-        
+
         if sentiment_match: sentiment = sentiment_match.group(1).strip()
         if topics_match: topics = topics_match.group(1).strip()
         if categories_match: categories = categories_match.group(1).strip()
-        
+
         logger.info(f"Categorization for entry ID {entry_id}: Sentiment={sentiment}, Topics={topics}, Categories={categories}")
         await asyncio.to_thread(db_utils.update_journal_entry_analysis, entry_id, sentiment=sentiment, topics=topics, categories=categories)
     else:
@@ -697,13 +697,13 @@ Categories: [Chosen Categories]"""
         await update.message.reply_text(f"⚠️ AI categorization of your entry encountered an issue. It's saved, but some insights might be missing. Details: {categorization_response or 'No response'}")
 
     await status_msg.edit_text("🧠 Thinking about your entry...")
-    
-    recent_entries_from_db = await asyncio.to_thread(db_utils.get_journal_entries_by_user, user_id, limit=5) 
+
+    recent_entries_from_db = await asyncio.to_thread(db_utils.get_journal_entries_by_user, user_id, limit=5)
     history_context_parts = []
     if recent_entries_from_db:
         history_context_parts.append(f"\n\nHere are summaries of some of your recent entries, {escape_markdown(display_name, version=2)}:")
         for entry in reversed(recent_entries_from_db):
-            if entry['entry_id'] == entry_id: 
+            if entry['entry_id'] == entry_id:
                 continue
             entry_ts_str = entry.get('timestamp')
             entry_ts_formatted = "earlier"
@@ -716,9 +716,9 @@ Categories: [Chosen Categories]"""
             history_context_parts.append(f"- On {entry_ts_formatted}: {escape_markdown(entry['raw_text'][:100], version=2)}... (Sentiment: {escape_markdown(entry.get('sentiment', 'N/A'),version=2)}, Topics: {escape_markdown(entry.get('topics', 'N/A'),version=2)})")
 
     history_context = "".join(history_context_parts) if history_context_parts else "\n\nThis seems to be one of your first entries, or I couldn't retrieve recent history."
-    
+
     current_entry_summary = f"User's name: {escape_markdown(display_name, version=2)}\nThe user's latest journal entry (submitted on {now.strftime('%Y-%m-%d %H:%M:%S %Z')} with input type '{input_type}', AI-detected sentiment '{escape_markdown(sentiment,version=2)}', AI-detected topics '{escape_markdown(topics,version=2)}', and AI-detected categories '{escape_markdown(categories,version=2)}') is:\n---\n{escape_markdown(text,version=2)}\n---"
-    
+
     therapist_analysis_prompt_template = f"""Act as a thoughtful and empathetic journaling assistant. The user, {{display_name}}, has provided the following journal entry:
 
 {{current_entry_summary}}
@@ -744,12 +744,12 @@ digraph JournalMap {{
     {{topics_dot}}
     {{categories_dot}}
 }}
---- DOT END --- 
+--- DOT END ---
 """
     # Sanitize inputs for DOT label (simple replacement)
     clean_text_summary = text[:30].replace('"', '').replace('\n', ' ').replace('{', '(').replace('}', ')')
     clean_sentiment = sentiment.replace('"', '').replace('{', '(').replace('}', ')')
-    
+
     topics_dot_str = ' '.join([f'topic{i} [label="Topic: {topic.strip().replace("-", "_").replace(" ", "_").replace("'", "").replace("`", "")}", fillcolor="lightgreen"]; main -> topic{i};' for i, topic in enumerate(str(topics).split(',')) if topic.strip() and topic != 'N/A'])
     categories_dot_str = ' '.join([f'cat{i} [label="Category: {category.strip().replace("-", "_").replace(" ", "_").replace("'", "").replace("`", "")}", fillcolor="lightcoral"]; main -> cat{i};' for i, category in enumerate(str(categories).split(',')) if category.strip() and category != 'N/A'])
 
@@ -775,7 +775,7 @@ digraph JournalMap {{
             dot_code_for_db = dot_match.group(1).strip()
             analysis_output_candidate = analysis_response_text.split("--- DOT START ---")[0]
             # Use a more generic marker if display_name can have markdown characters
-            reflection_marker_generic = "**Analysis for " 
+            reflection_marker_generic = "**Analysis for "
             if reflection_marker_generic in analysis_output_candidate:
                  # Find the end of the display name in the marker for splitting
                 marker_end_index = analysis_output_candidate.find(":**") + 3 # Length of ":**"
@@ -787,18 +787,18 @@ digraph JournalMap {{
         else:
             ai_analysis_output_for_user = analysis_response_text # No DOT code found, use the whole response as analysis
             logger.warning(f"DOT markers not found in AI analysis for entry {entry_id}")
-        
+
         ai_analysis_text_for_db = ai_analysis_output_for_user # Store the user-facing analysis
         await asyncio.to_thread(db_utils.update_journal_entry_analysis, entry_id, ai_analysis_text=ai_analysis_text_for_db, dot_code=dot_code_for_db)
     elif analysis_response_text: # It was blocked or API error
         ai_analysis_output_for_user = f"AI analysis was blocked or encountered an error: {analysis_response_text}"
         logger.warning(f"AI analysis failed/blocked for entry {entry_id}: {analysis_response_text}")
         await asyncio.to_thread(db_utils.update_journal_entry_analysis, entry_id, ai_analysis_text=ai_analysis_output_for_user, dot_code=None)
-    
+
     safe_ai_analysis_output = escape_markdown(ai_analysis_output_for_user, version=2)
     try:
         await status_msg.edit_text(safe_ai_analysis_output, parse_mode=ParseMode.MARKDOWN_V2)
-    except telegram.error.BadRequest: 
+    except telegram.error.BadRequest:
         logger.warning("Markdown error in AI analysis output, sending as plain text.")
         await status_msg.edit_text(ai_analysis_output_for_user, parse_mode=None)
 
@@ -822,7 +822,7 @@ digraph JournalMap {{
             await map_status_msg.edit_text("⚠️ Could not generate the mind map from the provided data.")
     else:
         await update.message.reply_text("(Mind map could not be generated for this entry.)")
-    
+
     await update.message.reply_text("✅ Your journal entry has been fully processed!")
 
 
@@ -860,7 +860,7 @@ async def post_init_tasks(application: Application) -> None:
     try:
         db_path = db_utils.DATABASE_PATH # Get DB path from db_utils
         os.makedirs(os.path.dirname(db_path), exist_ok=True) # Ensure directory for DB exists
-        
+
         # Use database_setup to create tables initially if it's preferred for setup logic
         conn_setup = database_setup.create_connection(db_path)
         if conn_setup:
@@ -872,7 +872,7 @@ async def post_init_tasks(application: Application) -> None:
 
     except Exception as e:
         logger.error(f"Error during database_setup in post_init_tasks: {e}", exc_info=True)
-    
+
     await post_set_commands(application)
     await initialize_token_data()
     asyncio.create_task(daily_prompt_scheduler(application))
@@ -892,10 +892,10 @@ async def post_set_commands(application: Application) -> None:
         BotCommand("help", "Show help"),
         BotCommand("cancel", "Cancel action / New Mode")
     ]
-    try: 
+    try:
         await application.bot.set_my_commands(commands)
         logger.info("Bot commands menu set.")
-    except Exception as e: 
+    except Exception as e:
         logger.error(f"Failed to set bot commands: {e}")
 
 # --- GLOBAL ERROR HANDLER ---
@@ -930,7 +930,7 @@ def main() -> None:
     application = (
         ApplicationBuilder()
         .token(TELEGRAM_TOKEN)
-        .post_init(post_init_tasks) 
+        .post_init(post_init_tasks)
         .build()
     )
 
@@ -954,8 +954,8 @@ def main() -> None:
         fallbacks=[
             CommandHandler('cancel', cancel_command),
             CommandHandler('end', end_session_command),
-            CommandHandler('start', start_command), 
-            CommandHandler('mode', start_command), 
+            CommandHandler('start', start_command),
+            CommandHandler('mode', start_command),
             CommandHandler('changemode', start_command),
             CommandHandler('help', help_command),
             CommandHandler('setusername', set_username_command),
@@ -974,7 +974,7 @@ def main() -> None:
     application.add_handler(CommandHandler("feedback", feedback_command))
     application.add_handler(CommandHandler("enableprompts", enable_prompts_command))
     application.add_handler(CommandHandler("disableprompts", disable_prompts_command))
-    
+
     application.add_handler(MessageHandler(
         filters.TEXT & ~filters.COMMAND & filters.ChatType.PRIVATE,
         lambda u, c: u.message.reply_text("Please use /start or /mode to begin, or /help for more options.")
@@ -986,3 +986,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+[end of New_Main.py]

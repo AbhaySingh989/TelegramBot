@@ -20,7 +20,7 @@ def migrate_users():
     try:
         with open(USER_PROFILES_JSON, 'r', encoding='utf-8') as f:
             profiles_data = json.load(f)
-        
+
         if not isinstance(profiles_data, dict):
             print(f"Error: Expected a dictionary in {USER_PROFILES_JSON}, but got {type(profiles_data)}. Aborting user migration.")
             return
@@ -29,7 +29,7 @@ def migrate_users():
             try:
                 user_id = int(user_id_str)
                 # The old JSON file stores the display name under the 'username' key.
-                display_name = profile_info.get('username') 
+                display_name = profile_info.get('username')
                 # telegram_username is not available in the old file.
                 telegram_username = profile_info.get('telegram_username') # Will likely be None
 
@@ -53,7 +53,7 @@ def migrate_users():
             except Exception as e:
                 print(f"An error occurred processing user {user_id_str}: {e}")
                 failed_count +=1
-        
+
         print(f"\nUser migration summary:")
         print(f"  Successfully migrated: {migrated_count} users.")
         print(f"  Failed/skipped: {failed_count} users.")
@@ -80,7 +80,7 @@ def migrate_journal_entries():
             if not reader.fieldnames or "UserID" not in reader.fieldnames:
                 print(f"Journal CSV {JOURNAL_CSV} is empty or missing required headers (e.g., UserID).")
                 return
-            
+
             for row_num, row in enumerate(reader, 1):
                 try:
                     user_id = int(row.get("UserID", "").strip())
@@ -88,14 +88,14 @@ def migrate_journal_entries():
                     input_type = row.get("Input Type", "text").strip() # Default to 'text' if missing
                     word_count_str = row.get("Word Count", "0").strip()
                     word_count = int(word_count_str) if word_count_str else 0
-                    
+
                     sentiment = row.get("Sentiment", "N/A").strip()
                     topics = row.get("Topics", "N/A").strip()
                     categories = row.get("Categories", "N/A").strip()
-                    
+
                     date_str = row.get("Date", "").strip()
                     time_str = row.get("Time", "").strip()
-                    
+
                     timestamp_obj = None
                     if date_str and time_str:
                         try:
@@ -132,14 +132,14 @@ def migrate_journal_entries():
                     else:
                         failed_count += 1
                         print(f"Row {row_num}: Failed to migrate journal entry for UserID {user_id}.")
-                
+
                 except ValueError as ve:
                     print(f"Row {row_num}: Invalid data format in row: {row}. Error: {ve}. Skipping.")
                     failed_count += 1
                 except Exception as e:
                     print(f"Row {row_num}: An error occurred processing row {row}: {e}")
                     failed_count +=1
-        
+
         print(f"\nJournal entry migration summary:")
         print(f"  Successfully migrated: {migrated_count} entries.")
         print(f"  Failed/skipped: {failed_count} entries.")
@@ -152,7 +152,7 @@ def migrate_journal_entries():
 
 if __name__ == '__main__':
     print("Starting data migration process...")
-    
+
     # Ensure database and tables exist before migration
     print("Ensuring database and tables are created...")
     conn = None
@@ -178,6 +178,6 @@ if __name__ == '__main__':
 
     migrate_users()
     migrate_journal_entries()
-    
+
     print("\nData migration process finished.")
     print(f"Please verify the data in the SQLite database: {db_utils.DATABASE_PATH}")

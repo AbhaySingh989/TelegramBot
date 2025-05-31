@@ -750,8 +750,8 @@ digraph JournalMap {{
     clean_text_summary = text[:30].replace('"', '').replace('\n', ' ').replace('{', '(').replace('}', ')')
     clean_sentiment = sentiment.replace('"', '').replace('{', '(').replace('}', ')')
 
-    topics_dot_str = ' '.join([f'topic{i} [label="Topic: {topic.strip().replace("-", "_").replace(" ", "_").replace("'", "").replace("`", "")}", fillcolor="lightgreen"]; main -> topic{i};' for i, topic in enumerate(str(topics).split(',')) if topic.strip() and topic != 'N/A'])
-    categories_dot_str = ' '.join([f'cat{i} [label="Category: {category.strip().replace("-", "_").replace(" ", "_").replace("'", "").replace("`", "")}", fillcolor="lightcoral"]; main -> cat{i};' for i, category in enumerate(str(categories).split(',')) if category.strip() and category != 'N/A'])
+    topics_dot_str = ' '.join([f'topic{i} [label="Topic: {topic.strip().replace("-", "_").replace(" ", "_").replace("'", "").replace("`", "").replace("""\"""", "")}", fillcolor="lightgreen"]; main -> topic{i};' for i, topic in enumerate(str(topics).split(',')) if topic.strip() and topic != 'N/A'])
+    categories_dot_str = ' '.join([f'cat{i} [label="Category: {category.strip().replace("-", "_").replace(" ", "_").replace("'", "").replace("`", "").replace("""\"""", "")}", fillcolor="lightcoral"]; main -> cat{i};' for i, category in enumerate(str(categories).split(',')) if category.strip() and category != 'N/A'])
 
     therapist_analysis_prompt = therapist_analysis_prompt_template.format(
         display_name=display_name,

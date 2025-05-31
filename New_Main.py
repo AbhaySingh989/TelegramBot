@@ -572,13 +572,21 @@ async def get_text_from_input(update: Update, context: ContextTypes.DEFAULT_TYPE
         return final_text, input_type, None
     except Exception as e:
         logger.error(f"Error in get_text_from_input main try block: {e}", exc_info=True)
-        if status_msg: try: await status_msg.delete(); except Exception: pass
+        if status_msg:
+            try:
+                await status_msg.delete()
+            except Exception:
+                pass
         return None, input_type, "An unexpected error occurred processing your input."
     finally:
         if temp_file_path and os.path.exists(temp_file_path):
             try: os.remove(temp_file_path); logger.info(f"Temp file deleted: {temp_file_path}")
             except OSError as e_del_file: logger.error(f"Error deleting temp file {temp_file_path}: {e_del_file}")
-        if status_msg: try: await status_msg.delete(); except Exception as e_del_msg: logger.warning(f"Could not delete status message: {e_del_msg}")
+        if status_msg:
+            try:
+                await status_msg.delete()
+            except Exception as e_del_msg:
+                logger.warning(f"Could not delete status message: {e_del_msg}")
 
 async def handle_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user

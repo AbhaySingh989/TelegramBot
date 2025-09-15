@@ -1,43 +1,76 @@
-# Journal
-How the Multimodal Bot Works
-This Telegram bot is designed as a versatile assistant, leveraging Google's Gemini AI for its core intelligence across different operational modes. It uses the python-telegram-bot library for interacting with the Telegram API and asyncio for efficient handling of asynchronous operations.
-Here's a breakdown of its main components and interactions:
-Core Setup & Initialization:
-Environment: Loads essential API keys (Telegram, Gemini) from a .env file.
-Gemini AI: Configures and initializes the gemini-1.5-flash-latest model with specific safety settings. This model is the backbone for text generation, understanding, audio transcription, and image analysis (OCR).
-Data Storage:
-user_profiles.json: Stores user-defined display names.
-token_usage.json: Tracks Gemini API token consumption (session, daily, total).
-journal.csv: Stores journal entries with metadata like sentiment, topics, categories, etc.
-bot_data/temp/: Temporary storage for downloaded audio/image files before processing.
-bot_data/visualizations/: Stores generated mind map images.
-File Lock: An asyncio.Lock is used to prevent race conditions when multiple operations might try to access shared files (profiles, token data, journal) concurrently.
-User Interaction & Conversation Flow:
-Entry Points: Users typically start interacting via /start, /mode, or /changemode.
-Mode Selection: The bot presents inline buttons for CHATBOT_MODE, JOURNAL_MODE, and OCR_MODE. User selection is handled by mode_button_callback.
-State Management: A ConversationHandler manages the bot's state, directing user input to the appropriate logic based on the current_mode stored in context.user_data.
-Input Handling (get_text_from_input): This crucial function processes various user inputs:
-Text: Used directly.
-Voice: Audio is downloaded, then sent to transcribe_audio_with_gemini. This function uploads the audio file to Gemini, which performs the transcription. The raw transcript is then passed to add_punctuation_with_gemini for enhancement (capitalization, punctuation) also using Gemini. The enhanced transcript is shown to the user.
-Image: The image is downloaded. For OCR mode (or image input in other modes), it's opened with PIL (Pillow) and then sent to Gemini along with a prompt to extract text.
-Generic Input Router (handle_input): After get_text_from_input provides the processed text and input type, this function routes the data to the mode-specific handler.
-Mode-Specific Logic:
-Chatbot Mode (handle_chatbot_logic):
-The extracted text (from user's text, voice, or image description if implemented) is sent to Gemini for a conversational response.
-The AI's response is then sent back to the user.
-OCR Mode (handle_ocr_logic):
-Requires an image input.
-The text extracted from the image by Gemini (via get_text_from_input) is formatted and sent back to the user.
-Journal Mode (handle_journal_logic): This is the most complex mode:
-Save Initial Entry: The raw text (from user's text, voice, or image OCR) is saved to journal.csv with basic metadata (user ID, timestamp, input type).
-AI Categorization: The text is sent to Gemini with a prompt to determine sentiment, topics, and predefined categories.
-Update Entry: The journal entry in the CSV is updated with this AI-generated analysis.
-AI Analysis & Mind Map Prep: The current entry, along with a summary of recent previous entries for context, is sent to Gemini. The prompt asks Gemini to act like a therapist, provide insights, and generate a mind map in DOT language format.
-Display Analysis: The textual analysis from Gemini is sent to the user.
-Generate Mind Map: If DOT code was successfully extracted, graphviz is used to render it into a PNG image.
-Send Mind Map: The generated image is sent to the user.
-Supporting Commands & Functions:
-/help, /setusername, /tokens, /cancel, /end: Standard utility commands.
-Profile, token, and journal CSV helper functions manage data persistence.
-generate_gemini_response: A wrapper for making calls to the Gemini API, including token incrementing and basic error/block handling.
-Error Handling: A global error_handler is set up to log exceptions and optionally inform the user of unexpected issues.
+# Multimodal AI Agent
+
+This repository contains a sophisticated, multi-modal AI agent built as a Telegram bot. The agent leverages the power of Google's Gemini Pro to offer a rich, interactive experience, including conversational AI, personal journaling with deep analysis, and optical character recognition (OCR).
+
+## Key Features
+
+- **Multi-Modal Interaction**: Communicate with the bot using text, voice, or images. The bot intelligently processes each input type to provide the appropriate response.
+- **Three Core Modes**:
+    - **🤖 Chatbot Mode**: Engage in open-ended conversations with a powerful AI.
+    - **📓 Journal Mode**: A private and secure space to record your thoughts.
+        - **AI-Powered Analysis**: Receive insights into your journal entries, including sentiment, key topics, and thematic categories.
+        - **Mind Map Visualization**: Get a `graphviz`-generated mind map that visually represents the core themes of your entry.
+        - **Daily Prompts**: Opt-in to receive daily prompts to inspire your journaling practice.
+    - **📄 OCR Mode**: Extract text from any image with high accuracy.
+- **User-Friendly Interface**:
+    - **Display Name**: Personalize your experience by setting a custom display name.
+    - **Command-Based Navigation**: Easily switch between modes and access features with simple commands.
+- **Token Tracking**: Monitor your Gemini API token usage with a dedicated command.
+- **Persistent Storage**: All user data, journal entries, and feedback are securely stored in a local SQLite database.
+
+## How It Works
+
+The bot is built with Python and leverages several key libraries:
+
+- **`python-telegram-bot`**: For all interactions with the Telegram API.
+- **`google-generativeai`**: To integrate with the Gemini Pro model for all AI-powered features.
+- **`SQLite`**: For data storage.
+- **`Graphviz`**: To generate mind map visualizations of journal entries.
+- **`Pillow`**: For image processing.
+
+The bot's architecture is centered around a `ConversationHandler` that manages the user's state (i.e., which mode they are in). When a user sends a message, the bot processes the input, routes it to the appropriate mode's logic, and generates a response.
+
+## Installation
+
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/your-username/your-repo-name.git
+    cd your-repo-name
+    ```
+2.  **Install dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+    You will also need to install Graphviz. You can find installation instructions for your operating system here: [https://graphviz.org/download/](https://graphviz.org/download/)
+
+3.  **Set up your environment variables**:
+    - Create a file named `.env` in the root of the project.
+    - Add your Telegram Bot Token and Gemini API Key to the `.env` file like this:
+        ```
+        TELEGRAM_BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
+        GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
+        ```
+
+## Usage
+
+1.  **Run the bot**:
+    ```bash
+    python New_Main.py
+    ```
+2.  **Interact with the bot on Telegram**:
+    - Open Telegram and search for your bot.
+    - Send the `/start` command to begin.
+    - Use the inline buttons to select a mode.
+    - Start chatting, journaling, or sending images for OCR!
+
+## Commands
+
+- `/start`, `/mode`, `/changemode`: Start the bot and select a mode.
+- `/setusername <name>`: Set your display name.
+- `/tokens`: Check your Gemini API token usage.
+- `/feedback <message>`: Send feedback to the developers.
+- `/enableprompts`: Enable daily journal prompts.
+- `/disableprompts`: Disable daily journal prompts.
+- `/end`: End the current session.
+- `/cancel`: Cancel the current action and return to mode selection.
+- `/help`: Show the help message.

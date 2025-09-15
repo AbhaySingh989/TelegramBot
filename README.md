@@ -1,6 +1,13 @@
-# Multimodal AI Agent
+# 💻 Multimodal AI Agent
 
 This repository contains a sophisticated, multi-modal AI agent built as a Telegram bot. The agent leverages the power of Google's Gemini Pro to offer a rich, interactive experience, including conversational AI, personal journaling with deep analysis, and optical character recognition (OCR).
+
+## 👤 Author
+
+**Abhay Singh**
+- 📧 Email: [abhay.rkvv@gmail.com]
+- 🐙 GitHub: [AbhaySingh989]
+- 💼 LinkedIn: [[Abhay Singh](https://www.linkedin.com/in/abhay-pratap-singh-905510149/)]
 
 ## Key Features
 
